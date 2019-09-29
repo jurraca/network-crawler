@@ -1,21 +1,27 @@
 defmodule Message do 
-	defstruct magic: "", command: "", payload_length: "", checksum: "", payload: "" 
+
+	defstruct magic: "", 
+			command: "", 
+			payload_length: 0, 
+			checksum: <<>>, 
+			payload: <<>> 
 
 	def encode(bin) do 
 		Base.encode16(bin, case: :lower)
+
 	end 
 
 	def decode(hex) do 
 		Base.decode16(hex, case: :lower)
 	end 
 
-	def parse_length(payload_length) do 
+	def parse_magic(bin) do 
 
-		payload_length
-		|> encode
-		|> String.trim("0") 
-		|> String.to_integer(16)
-	end
+		case encode(bin) do 
+			"f9beb4d9" -> "Mainnet"
+			_ -> "Not Mainnet"
+		end
+	end 
 
 	def parse_command(command) do 
 
@@ -25,10 +31,12 @@ defmodule Message do
 		parsed_command
 	end 
 
-	def parse_payload(payload, len) do 
+	def parse_payload(bin, len) do 
 
-		<<parsed_payload::binary-size(len), _wtv::binary>> = payload 
-		parsed_payload 
+		<<payload::binary-size(len), _wtv::binary>> = bin 
+
+		VersionPayload.parse(payload)
+	
 	end 
 
 	def verify_checksum(payload, checksum) do 
@@ -36,13 +44,13 @@ defmodule Message do
 		slice = String.slice(dblsha(payload), 0..3) 
 
 		slice === checksum 
-
+	# raise error 
 	end 
 
-	def dblsha(str) do 
+	def dblsha(bin) do 
 
-		h1 = :crypto.hash(:sha256, str) 
-		h2 = :crypto.hash(:sha256, h1)
+		h1 = :crypto.hash(:sha256, bin) 
+		:crypto.hash(:sha256, h1)
 		
 	end 
 end 
