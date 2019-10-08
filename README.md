@@ -1,21 +1,19 @@
 # Crawl
 
-**TODO: Add description**
+Elixir modules to interact with the Bitcoin peer network and retrieve data. WIP. Nowhere near ready to use. 
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `crawl` to your list of dependencies in `mix.exs`:
+[socket](https://hexdocs.pm/socket/api-reference.html) is the only dependency. 
 
-```elixir
-def deps do
-  [
-    {:crawl, "~> 0.1.0"}
-  ]
-end
-```
+Clone the repo, and launch with `iex -S mix`. 
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/crawl](https://hexdocs.pm/crawl).
+`NetworkEnvelope.from_peer("x.x.x.x:8333")` will begin a handshake with a given peer, read their version message, and send a verack. 
 
+Plenty TODO: 
+
+- handle binary pattern matching better. 
+- socket management is dismal. 
+- extend crawler to retrieve peers and crawl adjoining peers in isolated, supervised processes. 
+
+Not available in [Hex](https://hex.pm/docs/). 
