@@ -6,17 +6,9 @@ defmodule Message do
 			checksum: <<>>, 
 			payload: <<>> 
 
-	def encode(bin) do 
-		Base.encode16(bin, case: :lower)
-
-	end 
-
-	def decode(hex) do 
-		Base.decode16(hex, case: :lower)
-	end 
 
 	def parse_magic(bin) do 
-
+	# fix this to match on bytes
 		case encode(bin) do 
 			"f9beb4d9" -> "Mainnet"
 			_ -> "Not Mainnet"
@@ -31,12 +23,20 @@ defmodule Message do
 		parsed_command
 	end 
 
-	def parse_payload(bin, len) do 
+	def parse_payload(command, bin, len) do 
 
-		<<payload::binary-size(len), _wtv::binary>> = bin 
+		case command do 
+			"version" ->  parse_version(bin, len)
+			"verack" -> <<msg::binary>> = bin 
+		end 
+	end 
+
+	def parse_version(bin, len) do 
+
+		<<payload::binary-size(len), _rest::binary>> = bin
 
 		VersionPayload.parse(payload)
-	
+
 	end 
 
 	def verify_checksum(payload, checksum) do 
@@ -47,10 +47,20 @@ defmodule Message do
 	# raise error 
 	end 
 
-	def dblsha(bin) do 
+	defp dblsha(bin) do 
 
-		h1 = :crypto.hash(:sha256, bin) 
+		h1 = :crypto.hash(:sha256, bin)
 		:crypto.hash(:sha256, h1)
 		
 	end 
+
+	def encode(bin) do 
+		Base.encode16(bin, case: :lower)
+
+	end 
+
+	def decode(hex) do 
+		Base.decode16(hex, case: :lower)
+	end 
+
 end 

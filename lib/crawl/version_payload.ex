@@ -36,12 +36,12 @@ defmodule VersionPayload do
 
 		%VersionPayload{
 			protocol: protocol, 
-			services: services,
+			services: Services.parse(services),
 			timestamp: parse_timestamp(timestamp),
-			receiver_services: receiver_services,
+			receiver_services: Services.parse(receiver_services),
 			receiver_address: parse_addr(receiver_address),
 			receiver_port: receiver_port,
-			sender_services: sender_services,
+			sender_services: Services.parse(sender_services),
 			sender_address: parse_addr(sender_address),
 			sender_port: sender_port,
 			nonce: nonce,
@@ -78,17 +78,5 @@ defmodule VersionPayload do
 		l = for <<x::binary-2 <- bin>>, do: Base.encode16(x, case: :lower)
 		Enum.join(l, ":")
 	end 
-
-#	def read_varint(b) do 
-#		len = b |> Message.encode
-#		case len do 
-
-#			"ff" -> 8 
-#			"fe" -> 4
-#			"fd" -> 2
-#			_ -> 1
-
-#		end 
-#	end 
 
 end 
