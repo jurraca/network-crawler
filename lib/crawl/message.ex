@@ -28,6 +28,8 @@ defmodule Message do
 		case command do 
 			"version" ->  parse_version(bin, len)
 			"verack" -> <<msg::binary>> = bin 
+			"alert" -> "alert"
+			other -> other 
 		end 
 	end 
 
