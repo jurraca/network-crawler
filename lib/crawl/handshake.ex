@@ -3,8 +3,8 @@ defmodule Handshake do
 	require Socket 
 	defstruct version: false, verack: false
 
-	def start_link(socket) do 
-		Task.start_link(__MODULE__, :start, [socket])
+	def start_link({address, port}) do 
+		Task.start_link(__MODULE__, :stream, [{address, port}])
 	end 
 
 	def stream({address, port}) do 
@@ -14,7 +14,7 @@ defmodule Handshake do
 
 			&handle_stream/1,
 
-			fn socket -> Socket.Stream.close(socket) end 
+			fn socket -> Socket.Stream.close(socket) end
 			)
 	end 	
 
@@ -27,7 +27,7 @@ defmodule Handshake do
 	def handle_stream(socket) do
 		case Socket.Stream.recv(socket) do
 			{:ok, msg} -> 
-				{[parse(msg)], socket} 
+				{[parse(msg, socket)], socket} 
 			
 			nil -> handle_stream(socket)
 
@@ -37,18 +37,17 @@ defmodule Handshake do
 		end  
 	end  
 
-	def parse(msg) do 
+	def parse(msg, socket) do 
 		msg
 		|> NetworkEnvelope.parse() 
-		|> to_struct() 
+		|> to_struct(socket) 
 		#|> is_partial?()
 	end 
 
 	def version_handshake(socket) do 
 
 		v = "f9beb4d976657273696f6e0000000000650000005f1a69d2721101000100000000000000bc8f5e5400000000010000000000000000000000000000000000ffffc61b6409208d010000000000000000000000000000000000ffffcb0071c0208d128035cbc97953f80f2f5361746f7368693a302e392e332fcf05050001"
-		{:ok, version} = Base.decode16(v, case: :lower)
-		
+		{:ok, version} = Base.decode16(v, case: :lower)	
 		socket |> Socket.Stream.send(version)
 
     end
@@ -60,23 +59,28 @@ defmodule Handshake do
 
     end
 
-	def to_struct(%Message{command: "version"}) do
-		#:ok = verack_handshake(socket)
+	def to_struct(%Message{command: "version"}, socket) do
+		:ok = verack_handshake(socket)
 		%Handshake{version: true}
 	end 	
 
-	def to_struct(%Message{command: "verack"}) do 
+	def to_struct(%Message{command: "verack"}, _socket) do 
 		%Handshake{verack: true} 
+		IO.puts "Handshake complete? --> #{is_partial?()}"
 	end
 
-	def to_struct(%Message{command: "alert"}) do 
+	def to_struct(%Message{command: "ping"}, _socket) do 
+		IO.puts "Got ping."
+	end 
+
+	def to_struct(%Message{command: "alert"}, _socket) do 
 		{:error, "alert"} 
 	end 
 
-	def is_partial?(_) do 
+	def is_partial?() do 
 		%Handshake{}
 		|> Map.values() 
-		|> Enum.any?(fn x -> x == false end)
+		|> Enum.any?(fn x -> x == false end) || %Handshake{}
 	end 
 
 end 
